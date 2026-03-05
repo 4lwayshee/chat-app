@@ -13,6 +13,7 @@ function loadMessages() {
     fetch(`/messages/${roomId}`)
         .then(res => res.json())
         .then(messages => {
+            console.log('Loaded messages:', messages);
             chatMessages.innerHTML = '';
             messages.forEach(msg => displayMessage(msg));
         });
@@ -20,10 +21,10 @@ function loadMessages() {
 
 function displayMessage(msg) {
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message';
+    messageDiv.className = msg.isMine ? 'message mine' : 'message theirs';
     
     let senderHtml = '';
-    if (roomId === 'group' && msg.sender) {
+    if (!msg.isMine && msg.sender) {
         senderHtml = `<div class="message-sender">${msg.sender}</div>`;
     }
     
@@ -47,6 +48,7 @@ function sendMessage() {
     })
     .then(res => res.json())
     .then(msg => {
+        msg.isMine = true;
         displayMessage(msg);
         messageInput.value = '';
     });
