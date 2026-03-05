@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from datetime import datetime
 import json
 import os
-import sqlite3
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -14,91 +13,63 @@ USERS = {
     'test4': 'test4'
 }
 HISTORY_DIR = 'chat-history'
-DB_PATH = 'chat.db'
 
 # 폴더가 없으면 생성
 if not os.path.exists(HISTORY_DIR):
     os.makedirs(HISTORY_DIR)
 
-# 데이터베이스 초기화
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS messages
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  room_id TEXT,
-                  sender TEXT,
-                  text TEXT,
-                  time TEXT)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS read_status
-                 (username TEXT,
-                  room_id TEXT,
-                  last_read INTEGER,
-                  PRIMARY KEY (username, room_id))''')
-    conn.commit()
-    conn.close()
-
-init_db()
-
 def get_user_file(username, room_id):
     if room_id == 'group':
         return os.path.join(HISTORY_DIR, 'group.json')
     else:
-        # 1:1 채팅은 두 사용자 이름을 정렬해서 같은 파일 사용
         users = sorted([username, room_id])
         return os.path.join(HISTORY_DIR, f'{users[0]}_{users[1]}.json')
 
 def load_messages(username, room_id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('SELECT sender, text, time FROM messages WHERE room_id = ? ORDER BY id', (room_id,))
-    rows = c.fetchall()
-    conn.close()
-    
-    messages = []
-    for row in rows:
-        messages.append({
-            'sender': row[0],
-            'text': row[1],
-            'time': row[2]
-        })
-    return messages
+    user_file = get_user_file(username, room_id)
+    if os.path.exists(user_file):
+        with open(user_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    return []
 
 def get_unread_count(username, room_id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    messages = load_messages(username, room_id)
+    read_file = os.path.join(HISTORY_DIR, f'{username}_read.json')
     
-    c.execute('SELECT last_read FROM read_status WHERE username = ? AND room_id = ?', (username, room_id))
-    result = c.fetchone()
-    last_read = result[0] if result else 0
+    read_data = {}
+    if os.path.exists(read_file):
+        with open(read_file, 'r', encoding='utf-8') as f:
+            read_data = json.load(f)
     
-    c.execute('SELECT COUNT(*) FROM messages WHERE room_id = ? AND sender != ? AND id > ?', (room_id, username, last_read))
-    unread = c.fetchone()[0]
+    last_read = read_data.get(room_id, 0)
+    unread = 0
     
-    conn.close()
+    for msg in messages:
+        if msg.get('sender') != username:
+            msg_index = messages.index(msg)
+            if msg_index >= last_read:
+                unread += 1
+    
     return unread
 
 def mark_as_read(username, room_id):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
+    messages = load_messages(username, room_id)
+    read_file = os.path.join(HISTORY_DIR, f'{username}_read.json')
     
-    c.execute('SELECT MAX(id) FROM messages WHERE room_id = ?', (room_id,))
-    result = c.fetchone()
-    max_id = result[0] if result[0] else 0
+    read_data = {}
+    if os.path.exists(read_file):
+        with open(read_file, 'r', encoding='utf-8') as f:
+            read_data = json.load(f)
     
-    c.execute('INSERT OR REPLACE INTO read_status (username, room_id, last_read) VALUES (?, ?, ?)',
-              (username, room_id, max_id))
+    read_data[room_id] = len(messages)
     
-    conn.commit()
-    conn.close()
+    with open(read_file, 'w', encoding='utf-8') as f:
+        json.dump(read_data, f, ensure_ascii=False, indent=2)
 
-def save_message(room_id, sender, text, time):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('INSERT INTO messages (room_id, sender, text, time) VALUES (?, ?, ?, ?)',
-              (room_id, sender, text, time))
-    conn.commit()
-    conn.close()
+def save_messages(username, room_id, messages):
+    user_file = get_user_file(username, room_id)
+    with open(user_file, 'w', encoding='utf-8') as f:
+        json.dump(messages, f, ensure_ascii=False, indent=2)
 
 @app.route('/')
 def index():
@@ -160,14 +131,15 @@ def send_message():
     data = request.json
     room_id = data.get('room_id')
     
+    messages = load_messages(username, room_id)
+    
     message = {
         'text': data['text'],
         'time': datetime.now().strftime('%H:%M'),
         'sender': username
     }
-    
-    save_message(room_id, username, message['text'], message['time'])
-    
+    messages.append(message)
+    save_messages(username, room_id, messages)
     return jsonify(message)
 
 @app.route('/messages/<room_id>', methods=['GET'])
