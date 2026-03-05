@@ -59,4 +59,14 @@ messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
 
+document.getElementById('heartBtn').addEventListener('click', () => {
+    messageInput.value += '♥';
+    messageInput.focus();
+});
+
 loadMessages();
+
+// 메세지 확인 주기 (필요시 아래 주석 해제)
+// setInterval(() => {
+//     loadMessages();
+// }, 1500);
