@@ -14,6 +14,10 @@ USERS = {
 }
 HISTORY_DIR = 'chat-history'
 
+# 폴더가 없으면 생성
+if not os.path.exists(HISTORY_DIR):
+    os.makedirs(HISTORY_DIR)
+
 def get_user_file(username, room_id):
     if room_id == 'group':
         return os.path.join(HISTORY_DIR, 'group.json')
