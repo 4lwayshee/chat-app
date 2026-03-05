@@ -5,8 +5,8 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background-color: #b2c7d9;
+    font-family: 'Consolas', 'Monaco', monospace;
+    background-color: #f5f5f5;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,51 +16,67 @@ body {
 .chat-container {
     width: 390px;
     height: 590px;
-    background-color: #fff;
-    border-radius: 10px;
+    background-color: #ffffff;
+    border: 1px solid #808080;
+    border-radius: 0;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
 }
 
 .chat-header {
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-bottom: 1px solid #e0e0e0;
-    border-radius: 10px 10px 0 0;
+    background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+    padding: 2px 5px;
+    border-bottom: 1px solid #808080;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    font-family: 'MS Sans Serif', sans-serif;
+    font-size: 11px;
+}
+
+.menu-bar {
+    display: flex;
+    gap: 15px;
+    margin-left: 10px;
+}
+
+.menu-item {
+    padding: 2px 8px;
+    cursor: pointer;
+    color: #000;
+    font-size: 11px;
+}
+
+.menu-item:hover {
+    background-color: #c0c0c0;
 }
 
 .chat-header h2 {
-    font-size: 18px;
-    font-weight: 600;
-    flex: 1;
-    text-align: center;
+    display: none;
 }
 
 .back-btn {
-    padding: 8px 12px;
-    background-color: #f0f0f0;
-    border: none;
-    border-radius: 5px;
+    padding: 1px 4px;
+    background: linear-gradient(to bottom, #f0f0f0, #d0d0d0);
+    border: 1px outset #c0c0c0;
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 11px;
+    font-weight: normal;
+    font-family: 'MS Sans Serif', sans-serif;
 }
 
-.back-btn:hover {
-    background-color: #e0e0e0;
+.back-btn:active {
+    border: 1px inset #c0c0c0;
 }
 
 .logout-btn {
-    padding: 8px 15px;
-    background-color: #f0f0f0;
-    border: none;
-    border-radius: 5px;
+    padding: 1px 4px;
+    background: linear-gradient(to bottom, #f0f0f0, #d0d0d0);
+    border: 1px outset #c0c0c0;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 10px;
+    font-family: 'MS Sans Serif', sans-serif;
+    margin-left: auto;
 }
 
 .logout-btn:hover {
@@ -69,19 +85,20 @@ body {
 
 .chat-messages {
     flex: 1;
-    padding: 20px;
+    padding: 10px;
     overflow-y: auto;
-    background-color: #b2c7d9;
+    background-color: #ffffff;
+    font-family: 'Consolas', monospace;
 }
 
 .message {
-    margin-bottom: 15px;
+    margin-bottom: 8px;
     display: flex;
     flex-direction: column;
 }
 
 .message.mine {
-    align-items: flex-end;
+    align-items: flex-start;
 }
 
 .message.theirs {
@@ -89,34 +106,37 @@ body {
 }
 
 .message-bubble {
-    padding: 10px 15px;
-    border-radius: 18px;
-    max-width: 70%;
+    padding: 4px 8px;
+    border-radius: 0;
+    max-width: 90%;
     word-wrap: break-word;
     font-size: 12px;
+    background-color: transparent;
+    border: none;
+    font-family: 'Consolas', monospace;
 }
 
 .message.mine .message-bubble {
-    background-color: #fee500;
+    color: #333;
 }
 
 .message.theirs .message-bubble {
-    background-color: #fff;
-    border: 1px solid #e0e0e0;
+    color: #0066cc;
 }
 
 .message-sender {
     font-size: 10px;
     color: #666;
-    font-weight: 600;
-    margin-bottom: 5px;
-    padding-left: 5px;
+    font-weight: normal;
+    margin-bottom: 2px;
+    font-family: 'Consolas', monospace;
 }
 
 .message-time {
-    font-size: 9px;
-    color: #666;
-    margin-top: 5px;
+    font-size: 8px;
+    color: #999;
+    margin-top: 2px;
+    font-family: 'Consolas', monospace;
 }
 
 .unread-badge {
@@ -128,39 +148,41 @@ body {
 
 .chat-input {
     display: flex;
-    padding: 15px;
-    background-color: #fff;
-    border-top: 1px solid #e0e0e0;
-    border-radius: 0 0 10px 10px;
+    padding: 8px;
+    background-color: #f0f0f0;
+    border-top: 1px solid #ccc;
 }
 
 #messageInput {
     flex: 1;
-    padding: 10px 15px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 0;
     outline: none;
     font-size: 12px;
+    font-family: 'Consolas', monospace;
 }
 
 #sendBtn {
-    margin-left: 10px;
-    padding: 10px 20px;
-    background-color: #fee500;
-    border: none;
-    border-radius: 20px;
+    margin-left: 5px;
+    padding: 6px 12px;
+    background-color: #ddd;
+    border: 1px solid #ccc;
+    border-radius: 0;
     cursor: pointer;
-    font-weight: 600;
+    font-weight: normal;
+    font-size: 11px;
+    font-family: 'Arial', sans-serif;
 }
 
 #heartBtn {
-    margin-left: 10px;
-    padding: 10px 15px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 20px;
+    margin-left: 5px;
+    padding: 6px 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 0;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 12px;
 }
 
 #sendBtn:hover {

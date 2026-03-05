@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from datetime import datetime
 import json
 import os
+import pytz
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -133,9 +134,13 @@ def send_message():
     
     messages = load_messages(username, room_id)
     
+    # 한국 시간으로 변환
+    kst = pytz.timezone('Asia/Seoul')
+    now = datetime.now(kst)
+    
     message = {
         'text': data['text'],
-        'time': datetime.now().strftime('%H:%M'),
+        'time': now.strftime('%H:%M'),
         'sender': username
     }
     messages.append(message)

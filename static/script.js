@@ -1,13 +1,8 @@
 const messageInput = document.getElementById('messageInput');
 const sendBtn = document.getElementById('sendBtn');
 const chatMessages = document.getElementById('chatMessages');
-const roomTitle = document.getElementById('roomTitle');
 
-if (roomId === 'group') {
-    roomTitle.textContent = '전체 채팅방';
-} else {
-    roomTitle.textContent = roomId;
-}
+// roomTitle 요소가 없으므로 제거
 
 function loadMessages() {
     fetch(`/messages/${roomId}`)
