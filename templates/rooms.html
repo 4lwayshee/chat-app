@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 목록</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='rooms.css') }}">
+</head>
+<body>
+    <div class="rooms-container">
+        <div class="rooms-header">
+            <h2>채팅</h2>
+            <button class="logout-btn" onclick="location.href='/logout'">로그아웃</button>
+        </div>
+        <div class="rooms-list">
+            <div class="room-item" onclick="location.href='/chat/group'">
+                <div class="room-info">
+                    <div class="room-name">전체 채팅방</div>
+                    <div class="room-members">test, test2, test3, test4</div>
+                </div>
+                {% if unread_counts['group'] > 0 %}
+                <div class="unread-badge">{{ unread_counts['group'] }}</div>
+                {% endif %}
+            </div>
+            {% for user in users %}
+            <div class="room-item" onclick="location.href='/chat/{{ user }}'">
+                <div class="room-info">
+                    <div class="room-name">{{ user }}</div>
+                    <div class="room-members">1:1 채팅</div>
+                </div>
+                {% if unread_counts[user] > 0 %}
+                <div class="unread-badge">{{ unread_counts[user] }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
