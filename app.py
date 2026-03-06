@@ -3,6 +3,8 @@ from datetime import datetime
 import json
 import os
 import pytz
+import psycopg2
+from urllib.parse import urlparse
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -13,11 +15,44 @@ USERS = {
     'test3': 'test3',
     'test4': 'test4'
 }
-HISTORY_DIR = 'chat-history'
+# 데이터베이스 연결
+def get_db_connection():
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        # PostgreSQL (Render)
+        return psycopg2.connect(database_url)
+    else:
+        # 로컬에서는 JSON 파일 사용
+        return None
 
-# 폴더가 없으면 생성
-if not os.path.exists(HISTORY_DIR):
-    os.makedirs(HISTORY_DIR)
+# 데이터베이스 초기화
+def init_db():
+    conn = get_db_connection()
+    if conn:
+        cur = conn.cursor()
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                id SERIAL PRIMARY KEY,
+                room_id TEXT,
+                sender TEXT,
+                text TEXT,
+                time TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS read_status (
+                username TEXT,
+                room_id TEXT,
+                last_read INTEGER,
+                PRIMARY KEY (username, room_id)
+            )
+        ''')
+        conn.commit()
+        cur.close()
+        conn.close()
+
+init_db()
 
 def get_user_file(username, room_id):
     if room_id == 'group':
@@ -27,11 +62,30 @@ def get_user_file(username, room_id):
         return os.path.join(HISTORY_DIR, f'{users[0]}_{users[1]}.json')
 
 def load_messages(username, room_id):
-    user_file = get_user_file(username, room_id)
-    if os.path.exists(user_file):
-        with open(user_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return []
+    conn = get_db_connection()
+    if conn:
+        # PostgreSQL 사용
+        cur = conn.cursor()
+        cur.execute('SELECT sender, text, time FROM messages WHERE room_id = %s ORDER BY id', (room_id,))
+        rows = cur.fetchall()
+        cur.close()
+        conn.close()
+        
+        messages = []
+        for row in rows:
+            messages.append({
+                'sender': row[0],
+                'text': row[1],
+                'time': row[2]
+            })
+        return messages
+    else:
+        # 로컬에서는 JSON 파일 사용
+        user_file = get_user_file(username, room_id)
+        if os.path.exists(user_file):
+            with open(user_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        return []
 
 def get_unread_count(username, room_id):
     messages = load_messages(username, room_id)
@@ -67,10 +121,22 @@ def mark_as_read(username, room_id):
     with open(read_file, 'w', encoding='utf-8') as f:
         json.dump(read_data, f, ensure_ascii=False, indent=2)
 
-def save_messages(username, room_id, messages):
-    user_file = get_user_file(username, room_id)
-    with open(user_file, 'w', encoding='utf-8') as f:
-        json.dump(messages, f, ensure_ascii=False, indent=2)
+def save_message(room_id, sender, text, time):
+    conn = get_db_connection()
+    if conn:
+        # PostgreSQL 사용
+        cur = conn.cursor()
+        cur.execute('INSERT INTO messages (room_id, sender, text, time) VALUES (%s, %s, %s, %s)',
+                   (room_id, sender, text, time))
+        conn.commit()
+        cur.close()
+        conn.close()
+    else:
+        # 로컬에서는 JSON 파일 사용
+        messages = load_messages(sender, room_id)
+        message = {'text': text, 'time': time, 'sender': sender}
+        messages.append(message)
+        save_messages(sender, room_id, messages)
 
 @app.route('/')
 def index():
@@ -132,8 +198,6 @@ def send_message():
     data = request.json
     room_id = data.get('room_id')
     
-    messages = load_messages(username, room_id)
-    
     # 한국 시간으로 변환
     kst = pytz.timezone('Asia/Seoul')
     now = datetime.now(kst)
@@ -143,8 +207,9 @@ def send_message():
         'time': now.strftime('%H:%M'),
         'sender': username
     }
-    messages.append(message)
-    save_messages(username, room_id, messages)
+    
+    save_message(room_id, username, message['text'], message['time'])
+    
     return jsonify(message)
 
 @app.route('/messages/<room_id>', methods=['GET'])
