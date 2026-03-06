@@ -59,6 +59,12 @@ document.getElementById('heartBtn').addEventListener('click', () => {
     messageInput.focus();
 });
 
+// 투명도 조절 기능
+document.getElementById('opacitySlider').addEventListener('input', (e) => {
+    const opacity = e.target.value;
+    document.querySelector('.chat-container').style.opacity = opacity;
+});
+
 loadMessages();
 
 // 메세지 확인 주기 (필요시 아래 주석 해제)

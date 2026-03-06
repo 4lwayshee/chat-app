@@ -16,12 +16,13 @@ body {
 .chat-container {
     width: 390px;
     height: 590px;
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.7);
     border: 1px solid #808080;
     border-radius: 0;
     display: flex;
     flex-direction: column;
     box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    opacity: 0.9;
 }
 
 .chat-header {
@@ -69,6 +70,36 @@ body {
     border: 1px inset #c0c0c0;
 }
 
+.opacity-slider {
+    width: 50px;
+    height: 12px;
+    margin: 0 5px;
+    cursor: pointer;
+    background: #fff;
+}
+
+.opacity-slider::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #001122 !important;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 2px #000;
+}
+
+.opacity-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #001122 !important;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 2px #000;
+}
+
 .logout-btn {
     padding: 1px 4px;
     background: linear-gradient(to bottom, #f0f0f0, #d0d0d0);
@@ -87,7 +118,7 @@ body {
     flex: 1;
     padding: 10px;
     overflow-y: auto;
-    background-color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.8);
     font-family: 'Consolas', monospace;
 }
 
@@ -149,7 +180,7 @@ body {
 .chat-input {
     display: flex;
     padding: 8px;
-    background-color: #f0f0f0;
+    background-color: rgba(240, 240, 240, 0.9);
     border-top: 1px solid #ccc;
 }
 
