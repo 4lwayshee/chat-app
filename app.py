@@ -29,10 +29,14 @@ def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
     if database_url and PSYCOPG_AVAILABLE:
         try:
-            return psycopg.connect(database_url)
+            print(f"Attempting to connect to database...")
+            conn = psycopg.connect(database_url)
+            print("Database connection successful!")
+            return conn
         except Exception as e:
             print(f"Database connection failed: {e}")
             return None
+    print("No DATABASE_URL or psycopg not available, using JSON files")
     return None
 
 # 데이터베이스 초기화
