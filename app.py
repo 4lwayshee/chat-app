@@ -23,43 +23,58 @@ USERS = {
 # 데이터베이스 연결
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
+    print(f"DATABASE_URL exists: {bool(database_url)}")
+    print(f"PSYCOPG2_AVAILABLE: {PSYCOPG2_AVAILABLE}")
+    
     if database_url and PSYCOPG2_AVAILABLE:
-        # PostgreSQL (Render)
-        return psycopg2.connect(database_url)
+        try:
+            # PostgreSQL (Render)
+            conn = psycopg2.connect(database_url)
+            print("PostgreSQL connection successful")
+            return conn
+        except Exception as e:
+            print(f"PostgreSQL connection failed: {e}")
+            return None
     else:
         # 로컬에서는 JSON 파일 사용
+        print("Using local JSON files")
         return None
 
 # 데이터베이스 초기화
 def init_db():
     conn = get_db_connection()
     if conn and PSYCOPG2_AVAILABLE:
-        cur = conn.cursor()
-        cur.execute('''
-            CREATE TABLE IF NOT EXISTS messages (
-                id SERIAL PRIMARY KEY,
-                room_id TEXT,
-                sender TEXT,
-                text TEXT,
-                time TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        cur.execute('''
-            CREATE TABLE IF NOT EXISTS read_status (
-                username TEXT,
-                room_id TEXT,
-                last_read INTEGER,
-                PRIMARY KEY (username, room_id)
-            )
-        ''')
-        conn.commit()
-        cur.close()
-        conn.close()
+        try:
+            cur = conn.cursor()
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS messages (
+                    id SERIAL PRIMARY KEY,
+                    room_id TEXT,
+                    sender TEXT,
+                    text TEXT,
+                    time TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS read_status (
+                    username TEXT,
+                    room_id TEXT,
+                    last_read INTEGER,
+                    PRIMARY KEY (username, room_id)
+                )
+            ''')
+            conn.commit()
+            cur.close()
+            conn.close()
+            print("Database tables created successfully")
+        except Exception as e:
+            print(f"Database initialization failed: {e}")
     else:
         # 로컬에서는 폴더 생성
         if not os.path.exists(HISTORY_DIR):
             os.makedirs(HISTORY_DIR)
+        print("Local directory created")
 
 HISTORY_DIR = 'chat-history'
 
