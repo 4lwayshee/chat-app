@@ -8,8 +8,10 @@ try:
     import psycopg2
     from urllib.parse import urlparse
     PSYCOPG2_AVAILABLE = True
-except ImportError:
+    print("psycopg2 imported successfully")
+except ImportError as e:
     PSYCOPG2_AVAILABLE = False
+    print(f"psycopg2 import failed: {e}")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
