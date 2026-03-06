@@ -3,8 +3,13 @@ from datetime import datetime
 import json
 import os
 import pytz
-import psycopg2
-from urllib.parse import urlparse
+
+try:
+    import psycopg2
+    from urllib.parse import urlparse
+    PSYCOPG2_AVAILABLE = True
+except ImportError:
+    PSYCOPG2_AVAILABLE = False
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -18,7 +23,7 @@ USERS = {
 # 데이터베이스 연결
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
-    if database_url:
+    if database_url and PSYCOPG2_AVAILABLE:
         # PostgreSQL (Render)
         return psycopg2.connect(database_url)
     else:
@@ -28,7 +33,7 @@ def get_db_connection():
 # 데이터베이스 초기화
 def init_db():
     conn = get_db_connection()
-    if conn:
+    if conn and PSYCOPG2_AVAILABLE:
         cur = conn.cursor()
         cur.execute('''
             CREATE TABLE IF NOT EXISTS messages (
@@ -51,6 +56,24 @@ def init_db():
         conn.commit()
         cur.close()
         conn.close()
+    else:
+        # 로컬에서는 폴더 생성
+        if not os.path.exists(HISTORY_DIR):
+            os.makedirs(HISTORY_DIR)
+
+HISTORY_DIR = 'chat-history'
+
+def get_user_file(username, room_id):
+    if room_id == 'group':
+        return os.path.join(HISTORY_DIR, 'group.json')
+    else:
+        users = sorted([username, room_id])
+        return os.path.join(HISTORY_DIR, f'{users[0]}_{users[1]}.json')
+
+def save_messages(username, room_id, messages):
+    user_file = get_user_file(username, room_id)
+    with open(user_file, 'w', encoding='utf-8') as f:
+        json.dump(messages, f, ensure_ascii=False, indent=2)
 
 init_db()
 
