@@ -60,9 +60,18 @@ document.getElementById('heartBtn').addEventListener('click', () => {
 });
 
 // 투명도 조절 기능
-document.getElementById('opacitySlider').addEventListener('input', (e) => {
+const opacitySlider = document.getElementById('opacitySlider');
+
+// 저장된 투명도 값 불러오기
+const savedOpacity = localStorage.getItem('chatOpacity') || '1';
+opacitySlider.value = savedOpacity;
+document.querySelector('.chat-container').style.opacity = savedOpacity;
+
+opacitySlider.addEventListener('input', (e) => {
     const opacity = e.target.value;
     document.querySelector('.chat-container').style.opacity = opacity;
+    // 투명도 값을 localStorage에 저장
+    localStorage.setItem('chatOpacity', opacity);
 });
 
 loadMessages();
