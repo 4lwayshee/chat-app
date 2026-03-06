@@ -5,10 +5,12 @@ import os
 import pytz
 
 try:
-    import psycopg2
-    PSYCOPG2_AVAILABLE = True
-except ImportError:
-    PSYCOPG2_AVAILABLE = False
+    import psycopg
+    PSYCOPG_AVAILABLE = True
+    print("psycopg3 imported successfully")
+except ImportError as e:
+    PSYCOPG_AVAILABLE = False
+    print(f"psycopg3 import failed: {e}")
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
@@ -25,10 +27,11 @@ HISTORY_DIR = 'chat-history'
 # 데이터베이스 연결
 def get_db_connection():
     database_url = os.environ.get('DATABASE_URL')
-    if database_url and PSYCOPG2_AVAILABLE:
+    if database_url and PSYCOPG_AVAILABLE:
         try:
-            return psycopg2.connect(database_url)
-        except:
+            return psycopg.connect(database_url)
+        except Exception as e:
+            print(f"Database connection failed: {e}")
             return None
     return None
 
