@@ -10,8 +10,8 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-here')
 
 USERS = {
-    'test': 'test',
-    'test2': 'test2',
+    'hee': 'q1',
+    'sen': 'q1',
     'test3': 'test3',
     'test4': 'test4'
 }
