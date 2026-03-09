@@ -63,14 +63,18 @@ def init_db():
 
 init_db()
 
-def get_user_file(username, room_id):
-    if room_id == 'group':
-        return os.path.join(HISTORY_DIR, 'group.json')
-    else:
-        users = sorted([username, room_id])
-        return os.path.join(HISTORY_DIR, f'{users[0]}_{users[1]}.json')
+def get_room_id(username, other_user):
+    """두 사용자 간의 일관된 room_id 생성"""
+    if other_user == 'group':
+        return 'group'
+    users = sorted([username, other_user])
+    return f'{users[0]}_{users[1]}'
 
-def load_messages(username, room_id):
+def get_user_file(room_id):
+    return os.path.join(HISTORY_DIR, f'{room_id}.json')
+
+def load_messages(username, other_user):
+    room_id = get_room_id(username, other_user)
     conn = get_db_connection()
     if conn:
         # 데이터베이스 사용
@@ -90,14 +94,14 @@ def load_messages(username, room_id):
         return messages
     else:
         # JSON 파일 사용
-        user_file = get_user_file(username, room_id)
+        user_file = get_user_file(room_id)
         if os.path.exists(user_file):
             with open(user_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         return []
 
-def save_messages(username, room_id, messages):
-    user_file = get_user_file(username, room_id)
+def save_messages(room_id, messages):
+    user_file = get_user_file(room_id)
     with open(user_file, 'w', encoding='utf-8') as f:
         json.dump(messages, f, ensure_ascii=False, indent=2)
 
@@ -205,12 +209,15 @@ def send_message():
         'sender': username
     }
     
+    # room_id 정규화 (hee와 sen이 대화하면 항상 hee_sen으로 저장)
+    normalized_room_id = get_room_id(username, room_id)
+    
     conn = get_db_connection()
     if conn:
         # 데이터베이스에 저장
         cur = conn.cursor()
         cur.execute('INSERT INTO messages (room_id, sender, text, time) VALUES (%s, %s, %s, %s)',
-                   (room_id, username, message['text'], message['time']))
+                   (normalized_room_id, username, message['text'], message['time']))
         conn.commit()
         cur.close()
         conn.close()
@@ -218,7 +225,7 @@ def send_message():
         # JSON 파일에 저장
         messages = load_messages(username, room_id)
         messages.append(message)
-        save_messages(username, room_id, messages)
+        save_messages(normalized_room_id, messages)
     
     return jsonify(message)
 
